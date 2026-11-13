@@ -1,0 +1,2389 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IT Helpdesk Ticket Router — Operations Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Notion-Inspired Design Tokens (Warm Neutrals & Minimalist Precision)
+   ========================================================================== */
+:root {
+  --bg-app: #FFFFFF;
+  --bg-sidebar: #F7F6F3;
+  --bg-card: #FFFFFF;
+  --bg-hover: #EFEFED;
+  --bg-active: #E3E2DE;
+  --bg-subtle: #F1F1EF;
+  --bg-drawer: #FFFFFF;
+
+  --ink-primary: #37352F;
+  --ink-secondary: #787774;
+  --ink-tertiary: #9B9A97;
+  --ink-disabled: #C4C3BE;
+
+  --border-subtle: #E9E9E7;
+  --border-strong: #D3D1CB;
+  --border-focus: #2383E2;
+
+  --accent-primary: #2383E2;
+  --accent-hover: #1765B3;
+  --accent-subtle: #EBF3FB;
+
+  /* Semantic Status & Priority Tokens */
+  --status-pending-bg: #FBEDD6;
+  --status-pending-fg: #8F4700;
+  --status-assigned-bg: #E0EBF6;
+  --status-assigned-fg: #0B6E99;
+  --status-progress-bg: #E7E3FC;
+  --status-progress-fg: #5038A0;
+  --status-resolved-bg: #E2F3E7;
+  --status-resolved-fg: #0F7B43;
+  --status-fallback-bg: #FFE2DD;
+  --status-fallback-fg: #D44040;
+
+  --priority-high-bg: #FFE2DD;
+  --priority-high-fg: #EB5757;
+  --priority-med-bg: #FDECC8;
+  --priority-med-fg: #D9730D;
+  --priority-low-bg: #E3E2DE;
+  --priority-low-fg: #5A5A58;
+
+  --shadow-subtle: 0 1px 3px rgba(15, 15, 15, 0.05);
+  --shadow-card: 0 1px 2px rgba(15, 15, 15, 0.04), 0 4px 12px rgba(15, 15, 15, 0.03);
+  --shadow-drawer: -4px 0 24px rgba(15, 15, 15, 0.08);
+  --shadow-modal: 0 12px 36px rgba(15, 15, 15, 0.12);
+
+  --sidebar-w: 240px;
+  --header-h: 52px;
+}
+
+[data-theme="dark"] {
+  --bg-app: #191919;
+  --bg-sidebar: #202020;
+  --bg-card: #252525;
+  --bg-hover: #2F2F2F;
+  --bg-active: #383838;
+  --bg-subtle: #242424;
+  --bg-drawer: #202020;
+
+  --ink-primary: #EDEDED;
+  --ink-secondary: #9B9B9B;
+  --ink-tertiary: #6E6E6E;
+  --ink-disabled: #4A4A4A;
+
+  --border-subtle: #2F2F2F;
+  --border-strong: #3E3E3E;
+  --border-focus: #529CCA;
+
+  --accent-primary: #529CCA;
+  --accent-hover: #72B2DC;
+  --accent-subtle: #182C3D;
+
+  --status-pending-bg: #3E2B15;
+  --status-pending-fg: #E5A857;
+  --status-assigned-bg: #152E3E;
+  --status-assigned-fg: #529CCA;
+  --status-progress-bg: #272044;
+  --status-progress-fg: #9D8FF0;
+  --status-resolved-bg: #163622;
+  --status-resolved-fg: #4DAB73;
+  --status-fallback-bg: #421B19;
+  --status-fallback-fg: #FF7369;
+
+  --priority-high-bg: #421B19;
+  --priority-high-fg: #FF7369;
+  --priority-med-bg: #3E2B15;
+  --priority-med-fg: #E5A857;
+  --priority-low-bg: #2F2F2F;
+  --priority-low-fg: #B0B0AF;
+
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-drawer: -4px 0 24px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 12px 36px rgba(0, 0, 0, 0.6);
+}
+
+/* Base Reset & Core Typography */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: var(--bg-app);
+  color: var(--ink-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+.mono { font-family: 'IBM Plex Mono', SFMono-Regular, Menlo, monospace; }
+
+/* App Layout Grid */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-app);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Sidebar (Collapsible & Notion Minimalist) */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease;
+  z-index: 40;
+}
+.sidebar.collapsed {
+  width: 0px;
+  overflow: hidden;
+  border-right: none;
+}
+.sidebar-header {
+  padding: 14px 14px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.brand-box {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  color: var(--ink-primary);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.brand-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  background: var(--ink-primary);
+  color: var(--bg-app);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12px;
+}
+.brand-meta { line-height: 1.2; }
+.brand-meta small {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-secondary);
+  font-weight: 400;
+}
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.icon-btn:hover { background-color: var(--bg-hover); color: var(--ink-primary); }
+
+.sidebar-nav {
+  padding: 12px 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+.nav-group-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-tertiary);
+  padding: 8px 8px 4px;
+  font-weight: 600;
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  color: var(--ink-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  transition: all 0.15s ease;
+}
+.nav-link:hover {
+  background-color: var(--bg-hover);
+  color: var(--ink-primary);
+}
+.nav-link.active {
+  background-color: var(--bg-active);
+  color: var(--ink-primary);
+  font-weight: 600;
+}
+.nav-link svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+  opacity: 0.8;
+}
+.nav-link.active svg { opacity: 1; color: var(--accent-primary); }
+.nav-badge {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background-color: var(--bg-hover);
+  color: var(--ink-secondary);
+  font-weight: 600;
+}
+
+.sidebar-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-primary);
+}
+.user-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--accent-subtle);
+  color: var(--accent-primary);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Workspace Canvas */
+.workspace {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+}
+.topbar {
+  height: var(--header-h);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-app);
+  z-index: 30;
+  backdrop-filter: blur(8px);
+}
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+.breadcrumb span.current {
+  color: var(--ink-primary);
+  font-weight: 500;
+}
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+  background-color: var(--status-resolved-bg);
+  color: var(--status-resolved-fg);
+}
+.live-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--status-resolved-fg);
+  animation: liveBlink 1.8s infinite;
+}
+@keyframes liveBlink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.8); } }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.search-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12.5px;
+  color: var(--ink-tertiary);
+  cursor: pointer;
+  width: 200px;
+  transition: border-color 0.15s ease;
+}
+.search-pill:hover { border-color: var(--border-strong); }
+.search-pill kbd {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 1px 4px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  color: var(--ink-secondary);
+}
+
+/* Main Content Area */
+.content-canvas {
+  padding: 32px 40px 80px;
+  max-width: 1160px;
+  width: 100%;
+  margin: 0 auto;
+}
+.page-header {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink-primary);
+}
+.page-desc {
+  font-size: 13.5px;
+  color: var(--ink-secondary);
+  margin-top: 4px;
+  max-width: 65ch;
+}
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Notion Callout Stat Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.stat-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-subtle);
+}
+.stat-label {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ink-primary);
+  margin-top: 6px;
+  line-height: 1.1;
+}
+.stat-sub {
+  font-size: 11.5px;
+  color: var(--ink-tertiary);
+  margin-top: 4px;
+}
+
+/* General Card Component */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-primary);
+}
+
+/* Notion-Style Database Container & Toolbar */
+.db-container {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.db-toolbar {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-app);
+  flex-wrap: wrap;
+}
+.db-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.db-tab {
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.db-tab:hover { background-color: var(--bg-hover); color: var(--ink-primary); }
+.db-tab.active { background-color: var(--bg-active); color: var(--ink-primary); font-weight: 600; }
+.db-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.db-search {
+  padding: 5px 9px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  font-size: 12.5px;
+  background-color: var(--bg-subtle);
+  color: var(--ink-primary);
+  outline: none;
+  width: 170px;
+  transition: border-color 0.15s ease;
+}
+.db-search:focus { border-color: var(--accent-primary); background-color: var(--bg-app); }
+.db-select {
+  padding: 5px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  font-size: 12px;
+  background-color: var(--bg-subtle);
+  color: var(--ink-secondary);
+  outline: none;
+  cursor: pointer;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+table.db-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+table.db-table th {
+  padding: 8px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-tertiary);
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-sidebar);
+  white-space: nowrap;
+}
+table.db-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--ink-primary);
+  vertical-align: middle;
+}
+table.db-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+table.db-table tbody tr:hover { background-color: var(--bg-hover); }
+table.db-table tbody tr:last-child td { border-bottom: none; }
+
+/* Notion Board (Kanban) View */
+.kanban-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 16px;
+  background-color: var(--bg-sidebar);
+  min-height: 480px;
+}
+.kanban-col {
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  max-height: 680px;
+}
+.kanban-col-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-primary);
+}
+.kanban-col-body {
+  padding: 10px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kanban-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 12px;
+  cursor: pointer;
+  box-shadow: var(--shadow-subtle);
+  transition: all 0.15s ease;
+}
+.kanban-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.kanban-card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-primary);
+  margin: 6px 0 8px;
+  line-height: 1.35;
+}
+
+/* Semantic Badges & Property Tags */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.badge-pending { background: var(--status-pending-bg); color: var(--status-pending-fg); }
+.badge-pending .badge-dot { background: var(--status-pending-fg); }
+.badge-assigned { background: var(--status-assigned-bg); color: var(--status-assigned-fg); }
+.badge-assigned .badge-dot { background: var(--status-assigned-fg); }
+.badge-progress { background: var(--status-progress-bg); color: var(--status-progress-fg); }
+.badge-progress .badge-dot { background: var(--status-progress-fg); }
+.badge-resolved { background: var(--status-resolved-bg); color: var(--status-resolved-fg); }
+.badge-resolved .badge-dot { background: var(--status-resolved-fg); }
+.badge-fallback { background: var(--status-fallback-bg); color: var(--status-fallback-fg); }
+.badge-fallback .badge-dot { background: var(--status-fallback-fg); }
+
+.badge-ph { background: var(--priority-high-bg); color: var(--priority-high-fg); font-weight: 600; }
+.badge-pm { background: var(--priority-med-bg); color: var(--priority-med-fg); }
+.badge-pl { background: var(--priority-low-bg); color: var(--priority-low-fg); }
+
+.tag-cat {
+  background: var(--bg-subtle);
+  color: var(--ink-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11.5px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+.btn-primary {
+  background-color: var(--ink-primary);
+  color: var(--bg-app);
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-secondary {
+  background-color: var(--bg-card);
+  border-color: var(--border-subtle);
+  color: var(--ink-primary);
+}
+.btn-secondary:hover { background-color: var(--bg-hover); border-color: var(--border-strong); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* Forms */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  margin-bottom: 5px;
+}
+.form-control {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background-color: var(--bg-subtle);
+  color: var(--ink-primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  outline: none;
+  transition: all 0.15s ease;
+}
+.form-control:focus {
+  border-color: var(--border-focus);
+  background-color: var(--bg-app);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+/* File Attachment Dropper */
+.file-dropzone {
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  background-color: var(--bg-subtle);
+  transition: all 0.15s ease;
+}
+.file-dropzone:hover {
+  border-color: var(--accent-primary);
+  background-color: var(--bg-hover);
+}
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--ink-primary);
+  margin-top: 6px;
+}
+
+/* Inline Identifier Live Feedback */
+.id-feedback {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.id-feedback.valid { background-color: var(--status-resolved-bg); color: var(--status-resolved-fg); }
+.id-feedback.invalid { background-color: var(--status-fallback-bg); color: var(--status-fallback-fg); }
+.id-feedback.idle { background-color: var(--bg-subtle); color: var(--ink-tertiary); }
+
+/* Slide-Over Ticket Drawer */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 15, 15, 0.4);
+  z-index: 50;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(2px);
+}
+.drawer-backdrop.open { opacity: 1; visibility: visible; }
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 500px;
+  max-width: 90vw;
+  background-color: var(--bg-drawer);
+  border-left: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-drawer);
+  z-index: 51;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+.drawer.open { transform: translateX(0); }
+.drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.drawer-body {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+.drawer-prop {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.drawer-prop-name { color: var(--ink-tertiary); }
+.drawer-prop-val { color: var(--ink-primary); font-weight: 500; }
+
+/* Timeline List inside Drawer */
+.timeline {
+  margin-top: 18px;
+  border-left: 1.5px solid var(--border-subtle);
+  padding-left: 16px;
+  margin-left: 6px;
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 16px;
+}
+.timeline-dot {
+  position: absolute;
+  left: -21px;
+  top: 4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--accent-primary);
+  border: 2px solid var(--bg-app);
+}
+.timeline-label { font-size: 12.5px; font-weight: 600; color: var(--ink-primary); }
+.timeline-note { font-size: 12px; color: var(--ink-secondary); margin-top: 2px; }
+.timeline-time { font-size: 11px; color: var(--ink-tertiary); margin-top: 2px; }
+
+/* Minimalist Progress Meter */
+.meter-track {
+  height: 7px;
+  background-color: var(--bg-subtle);
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+  margin: 6px 0;
+}
+.meter-fill {
+  height: 100%;
+  background-color: var(--accent-primary);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+.meter-fill.warn { background-color: #D9730D; }
+.meter-fill.danger { background-color: #EB5757; }
+
+/* Analytics Horizontal Bars & Donut */
+.bar-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 40px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+}
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 10px 0;
+}
+.donut-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.donut-inner {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background-color: var(--bg-card);
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Toast */
+.toast-box {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: var(--ink-primary);
+  color: var(--bg-app);
+  padding: 10px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-modal);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Responsive Adjustments */
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .kanban-grid { grid-template-columns: repeat(2, 1fr); }
+  .content-canvas { padding: 20px 18px 60px; }
+  .sidebar { position: fixed; left: 0; transform: translateX(0); }
+  .sidebar.collapsed { transform: translateX(-100%); width: var(--sidebar-w); }
+}
+@media (max-width: 600px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .kanban-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 0 14px; }
+  .search-pill { width: 130px; }
+}
+</style>
+</head>
+<body>
+
+<div class="layout" id="root">
+  <!-- Dynamic Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="#home" class="brand-box">
+        <div class="brand-icon">H</div>
+        <div class="brand-meta">
+          <span>IT Helpdesk</span>
+          <small>Operations Workspace</small>
+        </div>
+      </a>
+      <button class="icon-btn" id="sidebar-close-btn" title="Collapse sidebar (Ctrl+\)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group-title">Overview</div>
+      <a href="#home" class="nav-link" data-view="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </a>
+      <a href="#tickets" class="nav-link" data-view="tickets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>My Tickets</span>
+        <span class="nav-badge" id="nav-count-tickets">0</span>
+      </a>
+      <a href="#submit" class="nav-link" data-view="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span>Submit Report</span>
+      </a>
+
+      <div class="nav-group-title" style="margin-top: 14px;">Management</div>
+      <a href="#handler" class="nav-link" data-view="handler">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Handler Desk</span>
+      </a>
+      <a href="#routing" class="nav-link" data-view="routing">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Routing Rules</span>
+        <span class="nav-badge" id="nav-count-fallback" style="display:none; background: var(--status-fallback-bg); color: var(--status-fallback-fg)">0</span>
+      </a>
+      <a href="#analytics" class="nav-link" data-view="analytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Analytics</span>
+      </a>
+
+      <div class="nav-group-title" style="margin-top: 14px;">Preferences</div>
+      <a href="#settings" class="nav-link" data-view="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar">OP</div>
+        <span>Operator</span>
+      </div>
+      <button class="icon-btn" id="theme-toggle-btn" title="Toggle theme">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Canvas -->
+  <main class="workspace">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="sidebar-toggle-btn" title="Toggle sidebar">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="breadcrumb">
+          <span>Workspace</span>
+          <span>/</span>
+          <span class="current" id="topbar-view-name">Home</span>
+        </div>
+        <div class="live-indicator" id="live-indicator" title="Connected to server via real-time stream">
+          <span class="live-pulse"></span>
+          <span>Live Sync</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-pill" id="global-search-trigger" onclick="location.hash='#tickets'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Find ticket...</span>
+          <kbd>/</kbd>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="seedDemo()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Load Demo
+        </button>
+      </div>
+    </header>
+
+    <div class="content-canvas" id="main-content">
+      <!-- Injected dynamically by router -->
+    </div>
+  </main>
+</div>
+
+<!-- Slide-Over Ticket Drawer (Inspector) -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="ticket-drawer">
+  <div class="drawer-header">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span class="mono" style="font-weight:600; font-size:14px;" id="d-id">TKT-0000</span>
+      <span id="d-status-badge"></span>
+    </div>
+    <button class="icon-btn" onclick="closeDrawer()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="d-body">
+    <!-- Populated by openDrawer(id) -->
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   Client Application Core (Real-Time SSE Sync, Notion Workspace & Kanban)
+   ========================================================================== */
+
+// Pure Algorithmic Engine & Domain Constants (Preserved)
+const DEPTS = { CS: 'North Block', EE: 'North Block', ME: 'South Block', CE: 'South Block', AD: 'Admin Block', HR: 'Admin Block', FN: 'Admin Block', LB: 'Library Wing' };
+const ZONES = ['North Block', 'South Block', 'Admin Block', 'Library Wing'];
+const CATS = ['Hardware', 'Software', 'Network', 'Access', 'Other'];
+const ORDER = ['Network', 'Access', 'Hardware', 'Software', 'Other'];
+const TEAMS = ['HD1', 'HD2', 'HD3', 'HD4'];
+const RX = /^[A-Z]{2}-[0-9]{3}-[HML]$/;
+const KW = {
+  Network: /\b(wi-?fi|network|internet|lan|vpn|outage|router|switch|ethernet)\b/i,
+  Access: /\b(password|login|log in|access|account|locked|permission|credential)s?\b/i,
+  Hardware: /\b(laptop|computer|pc|screen|monitor|keyboard|mouse|printer|battery|disk|ram|hardware)s?\b/i,
+  Software: /\b(install\w*|software|licen[sc]e|app|update|crash\w*|office)s?\b/i
+};
+
+function dfaStep(s, c) {
+  const isA = c >= 'A' && c <= 'Z', isD = c >= '0' && c <= '9';
+  if (s === 0 || s === 1) return isA ? s + 1 : 'X';
+  if (s === 2 || s === 6) return c === '-' ? s + 1 : 'X';
+  if (s >= 3 && s <= 5) return isD ? s + 1 : 'X';
+  if (s === 7) return 'HML'.includes(c) ? 8 : 'X';
+  return 'X';
+}
+
+function dfaRun(s) {
+  let q = 0;
+  for (let i = 0; i < s.length; i++) {
+    const n = dfaStep(q, s[i]);
+    if (n === 'X') return { ok: false, reason: `Unexpected character "${s[i]}" at position ${i + 1}` };
+    q = n;
+  }
+  return q === 8 ? { ok: true } : { ok: false, reason: 'Expected format: DEPT-ISSUE-PRIORITY (e.g. CS-101-H)' };
+}
+
+function classify(issue, desc) {
+  const n = +issue, base = n >= 100 && n < 600 ? CATS[Math.floor(n / 100) - 1] : null;
+  if (!base) return { category: null, reason: `Issue code ${issue} is unmapped (expected 100–599)` };
+  const m = new Set([base]);
+  for (const c of ORDER.slice(0, 4)) if (KW[c].test(desc || '')) m.add(c);
+  const hit = ORDER.find(c => m.has(c));
+  return { category: hit, reason: m.size > 1 ? `Patterns [${[...m].join(', ')}] matched → ${hit} (by precedence)` : `Issue code ${issue} → ${hit}` };
+}
+
+const teamName = id => id === 'L2' ? 'Level-2 Escalation' : 'Helpdesk ' + id.slice(2);
+
+// Application State
+let appState = {
+  tickets: [],
+  rejects: [],
+  teams: { HD1: { avail: true, cap: 8 }, HD2: { avail: true, cap: 8 }, HD3: { avail: true, cap: 8 }, HD4: { avail: true, cap: 8 }, L2: { avail: true, cap: 10 } },
+  routingRules: [],
+  activeView: 'home',
+  selectedTeam: 'HD1',
+  activeTicketId: null,
+  viewMode: 'table', // 'table' or 'board' (Kanban)
+  tableFilter: { search: '', category: 'All', priority: 'All', status: 'All', viewTab: 'all', page: 1, pageSize: 8 },
+  stagedAttachment: null
+};
+
+// API & Real-Time Sync Helpers
+async function fetchState(silent = false) {
+  try {
+    const res = await fetch('/api/state');
+    const data = await res.json();
+    appState.tickets = data.tickets || [];
+    appState.teams = data.teams || appState.teams;
+    appState.rejects = data.rejects || [];
+    appState.routingRules = data.routingRules || [];
+    updateBadges();
+    if (!silent) renderView();
+  } catch (err) {
+    console.error('Failed to sync application state:', err);
+  }
+}
+
+// Establish Server-Sent Events (SSE) Live Connection for multi-user sync
+function setupLiveStream() {
+  if (typeof EventSource !== 'undefined') {
+    const stream = new EventSource('/api/stream');
+    stream.onmessage = e => {
+      fetchState(false);
+      const ind = document.getElementById('live-indicator');
+      if (ind) {
+        ind.style.transform = 'scale(1.08)';
+        setTimeout(() => ind.style.transform = 'scale(1)', 400);
+      }
+    };
+    stream.onerror = () => {
+      // Reconnects automatically
+    };
+  }
+}
+
+function updateBadges() {
+  const tCount = document.getElementById('nav-count-tickets');
+  if (tCount) tCount.textContent = appState.tickets.length;
+
+  const fCount = document.getElementById('nav-count-fallback');
+  const fallbackNum = appState.tickets.filter(t => t.queue === 'fallback').length;
+  if (fCount) {
+    fCount.textContent = fallbackNum;
+    fCount.style.display = fallbackNum > 0 ? 'inline-block' : 'none';
+  }
+}
+
+function showToast(msg) {
+  const existing = document.querySelector('.toast-box');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'toast-box';
+  el.innerHTML = `<span>${msg}</span>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+
+// Helpers for Render
+const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtDate = d => d ? new Date(d).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+
+function statusBadge(t) {
+  if (t.queue === 'fallback') return `<span class="badge badge-fallback"><span class="badge-dot"></span>Central Fallback</span>`;
+  if (t.queue === 'waiting') return `<span class="badge badge-pending"><span class="badge-dot"></span>Waiting Queue</span>`;
+  const st = t.status || 'Pending';
+  const cls = st === 'Resolved' ? 'badge-resolved' : (st === 'In Progress' ? 'badge-progress' : (st === 'Assigned' ? 'badge-assigned' : 'badge-pending'));
+  return `<span class="badge ${cls}"><span class="badge-dot"></span>${st}</span>`;
+}
+
+function priorityBadge(p) {
+  const cls = p === 'H' ? 'badge-ph' : (p === 'M' ? 'badge-pm' : 'badge-pl');
+  const lbl = { H: 'High', M: 'Med', L: 'Low' }[p] || p;
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+function openCount(teamId) {
+  return appState.tickets.filter(t => t.team === teamId && (t.status === 'Assigned' || t.status === 'In Progress')).length;
+}
+
+/* ==========================================================================
+   Page Renderers
+   ========================================================================== */
+
+const Views = {
+  // 1. HOME VIEW
+  home: () => {
+    const total = appState.tickets.length;
+    const active = appState.tickets.filter(t => t.status === 'Assigned' || t.status === 'In Progress').length;
+    const resolved = appState.tickets.filter(t => t.status === 'Resolved').length;
+    const fallback = appState.tickets.filter(t => t.queue === 'fallback').length;
+    const waiting = appState.tickets.filter(t => t.queue === 'waiting').length;
+    const resRate = total > 0 ? Math.round((resolved / total) * 100) : 0;
+    const recent = [...appState.tickets].slice(0, 5);
+
+    return `
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Operations Home</h1>
+          <p class="page-desc">Operational posture, workload distribution, and real-time ticket lifecycle overview.</p>
+        </div>
+        <div class="page-actions">
+          <a href="#submit" class="btn btn-primary btn-sm">+ New Ticket</a>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Active Tickets <span>⚡</span></div>
+          <div class="stat-value">${active}</div>
+          <div class="stat-sub">Across 4 Tier-1 teams</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Resolved Rate <span>✓</span></div>
+          <div class="stat-value">${resRate}%</div>
+          <div class="stat-sub">${resolved} of ${total} resolved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Fallback Queue <span>⚠️</span></div>
+          <div class="stat-value" style="${fallback > 0 ? 'color: var(--status-fallback-fg);' : ''}">${fallback}</div>
+          <div class="stat-sub">Needs routing correction</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Waiting Capacity <span>⏳</span></div>
+          <div class="stat-value">${waiting}</div>
+          <div class="stat-sub">Queued for open slots</div>
+        </div>
+      </div>
+
+      ${fallback > 0 ? `
+        <div class="card" style="border-left: 3px solid var(--status-fallback-fg); background: var(--status-fallback-bg); padding: 14px 18px; margin-bottom: 20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <b style="color:var(--status-fallback-fg); font-size:13.5px;">Attention: ${fallback} ticket(s) in Central Fallback Queue</b>
+              <p style="color:var(--ink-secondary); font-size:12.5px; margin-top:2px;">These requests could not be automatically routed due to unmapped issue codes or unknown departments.</p>
+            </div>
+            <a href="#routing" class="btn btn-secondary btn-sm" style="background:#fff;">Inspect & Reassign</a>
+          </div>
+        </div>
+      ` : ''}
+
+      <div style="display:grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; align-items: start;">
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-header">
+            <h2 class="card-title">Recent Tickets</h2>
+            <a href="#tickets" class="btn btn-secondary btn-sm">View All</a>
+          </div>
+          ${recent.length === 0 ? '<p style="color:var(--ink-tertiary); font-size:13px;">No tickets submitted yet. Click "Load Demo" to populate realistic data.</p>' : `
+            <div class="table-wrap">
+              <table class="db-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Identifier</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Assigned</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${recent.map(t => `
+                    <tr onclick="openDrawer('${t.id}')">
+                      <td><span class="mono" style="font-weight:600;">${t.id}</span></td>
+                      <td><span class="mono">${t.code}</span></td>
+                      <td><span class="tag-cat">${t.category || 'Unmapped'}</span></td>
+                      <td>${statusBadge(t)}</td>
+                      <td>${t.team ? teamName(t.team) : (t.queue === 'fallback' ? 'Fallback' : 'Waiting')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        </div>
+
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-header">
+            <h2 class="card-title">Team Workload</h2>
+            <a href="#handler" class="btn btn-secondary btn-sm">Handler Desk</a>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            ${[...TEAMS, 'L2'].map(id => {
+              const cap = (appState.teams[id] && appState.teams[id].cap) || (id === 'L2' ? 10 : 8);
+              const cnt = openCount(id);
+              const avail = appState.teams[id] ? appState.teams[id].avail : true;
+              const pct = Math.min(100, Math.round((cnt / cap) * 100));
+              const warn = cnt >= cap;
+              return `
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:3px;">
+                    <b style="color:var(--ink-primary);">${teamName(id)} ${!avail ? '<span style="color:var(--ink-tertiary); font-weight:400;">(Offline)</span>' : ''}</b>
+                    <span style="color:var(--ink-secondary);">${cnt} / ${cap} open</span>
+                  </div>
+                  <div class="meter-track">
+                    <div class="meter-fill ${warn ? 'danger' : (cnt >= cap - 1 ? 'warn' : '')}" style="width: ${pct}%;"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  // 2. MY TICKETS VIEW (Notion Database Table & Kanban Board View)
+  tickets: () => {
+    const f = appState.tableFilter;
+    let list = [...appState.tickets];
+
+    // Filter by view tab
+    if (f.viewTab === 'active') list = list.filter(t => t.status === 'Assigned' || t.status === 'In Progress');
+    else if (f.viewTab === 'resolved') list = list.filter(t => t.status === 'Resolved');
+
+    // Filter by Search
+    if (f.search.trim()) {
+      const q = f.search.trim().toLowerCase();
+      list = list.filter(t => t.id.toLowerCase().includes(q) || t.code.toLowerCase().includes(q) || (t.desc || '').toLowerCase().includes(q) || (t.name || '').toLowerCase().includes(q));
+    }
+    // Filter by Category
+    if (f.category !== 'All') list = list.filter(t => t.category === f.category);
+    // Filter by Priority
+    if (f.priority !== 'All') list = list.filter(t => t.priority === f.priority);
+    // Filter by Status
+    if (f.status !== 'All') list = list.filter(t => t.status === f.status);
+
+    const totalFiltered = list.length;
+    const totalPages = Math.max(1, Math.ceil(totalFiltered / f.pageSize));
+    const currentPage = Math.min(f.page, totalPages);
+    const startIdx = (currentPage - 1) * f.pageSize;
+    const pageItems = list.slice(startIdx, startIdx + f.pageSize);
+
+    return `
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Tickets Database</h1>
+          <p class="page-desc">Search, filter, and inspect helpdesk tickets, attachments, and assignment lifecycles.</p>
+        </div>
+        <div class="page-actions">
+          <!-- View Mode Switcher (Table vs. Board) -->
+          <div style="display:flex; border:1px solid var(--border-subtle); border-radius:6px; overflow:hidden; background:var(--bg-subtle);">
+            <button class="icon-btn" style="padding:5px 8px; border-radius:0; ${appState.viewMode === 'table' ? 'background:var(--bg-active); font-weight:600;' : ''}" title="Table View" onclick="setViewMode('table')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+            </button>
+            <button class="icon-btn" style="padding:5px 8px; border-radius:0; ${appState.viewMode === 'board' ? 'background:var(--bg-active); font-weight:600;' : ''}" title="Kanban Board View" onclick="setViewMode('board')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+            </button>
+          </div>
+
+          <a href="/api/tickets/export/csv" class="btn btn-secondary btn-sm" download title="Export tickets as CSV">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </a>
+          <a href="#submit" class="btn btn-primary btn-sm">+ Submit Ticket</a>
+        </div>
+      </div>
+
+      <div class="db-container">
+        <div class="db-toolbar">
+          <div class="db-tabs">
+            <button class="db-tab ${f.viewTab === 'all' ? 'active' : ''}" onclick="setTableTab('all')">All Tickets (${appState.tickets.length})</button>
+            <button class="db-tab ${f.viewTab === 'active' ? 'active' : ''}" onclick="setTableTab('active')">Needs Attention</button>
+            <button class="db-tab ${f.viewTab === 'resolved' ? 'active' : ''}" onclick="setTableTab('resolved')">Resolved</button>
+          </div>
+
+          <div class="db-filters">
+            <input type="text" class="db-search" id="ticket-table-search" placeholder="Filter tickets..." value="${esc(f.search)}" oninput="setTableSearch(this.value)">
+            
+            <select class="db-select" onchange="setTableFilterProp('category', this.value)">
+              <option value="All" ${f.category === 'All' ? 'selected' : ''}>Category: All</option>
+              ${CATS.map(c => `<option value="${c}" ${f.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+
+            <select class="db-select" onchange="setTableFilterProp('priority', this.value)">
+              <option value="All" ${f.priority === 'All' ? 'selected' : ''}>Priority: All</option>
+              <option value="H" ${f.priority === 'H' ? 'selected' : ''}>High</option>
+              <option value="M" ${f.priority === 'M' ? 'selected' : ''}>Medium</option>
+              <option value="L" ${f.priority === 'L' ? 'selected' : ''}>Low</option>
+            </select>
+
+            <select class="db-select" onchange="setTableFilterProp('status', this.value)">
+              <option value="All" ${f.status === 'All' ? 'selected' : ''}>Status: All</option>
+              <option value="Pending" ${f.status === 'Pending' ? 'selected' : ''}>Pending</option>
+              <option value="Assigned" ${f.status === 'Assigned' ? 'selected' : ''}>Assigned</option>
+              <option value="In Progress" ${f.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+              <option value="Resolved" ${f.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+            </select>
+          </div>
+        </div>
+
+        ${appState.viewMode === 'board' ? `
+          <!-- Notion Kanban Board View -->
+          <div class="kanban-grid">
+            ${['Pending', 'Assigned', 'In Progress', 'Resolved'].map(colSt => {
+              const colTickets = list.filter(t => (t.status || 'Pending') === colSt);
+              return `
+                <div class="kanban-col">
+                  <div class="kanban-col-header">
+                    <span>${colSt}</span>
+                    <span class="badge" style="background:var(--bg-subtle); color:var(--ink-secondary);">${colTickets.length}</span>
+                  </div>
+                  <div class="kanban-col-body">
+                    ${colTickets.length === 0 ? '<div style="text-align:center; padding:20px 0; font-size:12px; color:var(--ink-tertiary);">No tickets</div>' : colTickets.map(t => `
+                      <div class="kanban-card" onclick="openDrawer('${t.id}')">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                          <span class="mono" style="font-weight:600; font-size:12px;">${t.id}</span>
+                          ${priorityBadge(t.priority)}
+                        </div>
+                        <div class="kanban-card-title">${esc(t.desc)}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                          <span class="tag-cat">${t.category || 'Unmapped'}</span>
+                          <span style="font-size:11px; color:var(--ink-secondary);">${t.team ? teamName(t.team) : (t.queue === 'fallback' ? 'Fallback' : 'Waiting')}</span>
+                        </div>
+                        ${t.attachments && t.attachments.length ? `
+                          <div style="margin-top:6px; font-size:11px; color:var(--accent-primary); display:flex; align-items:center; gap:4px;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                            <span>${t.attachments.length} file(s)</span>
+                          </div>
+                        ` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : `
+          <!-- Notion Database Table View -->
+          <div class="table-wrap">
+            <table class="db-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Identifier</th>
+                  <th>Summary</th>
+                  <th>Category</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Assigned Handler</th>
+                  <th>Submitted</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pageItems.length === 0 ? `
+                  <tr><td colspan="8" style="text-align:center; padding: 36px 0; color:var(--ink-tertiary);">No tickets match the active filters.</td></tr>
+                ` : pageItems.map(t => `
+                  <tr onclick="openDrawer('${t.id}')">
+                    <td><span class="mono" style="font-weight:600; color:var(--ink-primary);">${t.id}</span></td>
+                    <td><span class="mono">${t.code}</span></td>
+                    <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                      ${t.attachments && t.attachments.length ? `<span title="Has attachments" style="color:var(--accent-primary); margin-right:4px;">📎</span>` : ''}
+                      ${esc(t.desc)}
+                    </td>
+                    <td><span class="tag-cat">${t.category || 'Unmapped'}</span></td>
+                    <td>${priorityBadge(t.priority)}</td>
+                    <td>${statusBadge(t)}</td>
+                    <td>${t.team ? teamName(t.team) : (t.queue === 'fallback' ? '<span style="color:var(--status-fallback-fg)">Fallback Queue</span>' : 'Waiting Queue')}</td>
+                    <td style="color:var(--ink-secondary);">${fmtDate(t.created)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Bar -->
+          <div style="padding: 10px 14px; border-top:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:space-between; font-size:12.5px; color:var(--ink-secondary);">
+            <span>Showing ${list.length ? startIdx + 1 : 0}–${Math.min(startIdx + f.pageSize, totalFiltered)} of ${totalFiltered} tickets</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-secondary btn-sm" ${currentPage <= 1 ? 'disabled style="opacity:0.4;"' : ''} onclick="changePage(-1)">Previous</button>
+              <span style="padding: 4px 8px;">Page ${currentPage} of ${totalPages}</span>
+              <button class="btn btn-secondary btn-sm" ${currentPage >= totalPages ? 'disabled style="opacity:0.4;"' : ''} onclick="changePage(1)">Next</button>
+            </div>
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  // 3. SUBMIT REPORT VIEW (With File / Screenshot Attachment Support)
+  submit: () => {
+    return `
+      <div class="page-header" style="max-width:640px; margin:0 auto 24px;">
+        <div>
+          <h1 class="page-title">Submit Incident Report</h1>
+          <p class="page-desc">Enter department details, structured device identifier, description, and optional file attachments.</p>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:640px; margin:0 auto;">
+        <form id="submit-form" onsubmit="handleFormSubmit(event)">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="inp-name">Reporter Name *</label>
+              <input type="text" id="inp-name" class="form-control" placeholder="Asha Rao" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inp-email">Email (Optional)</label>
+              <input type="email" id="inp-email" class="form-control" placeholder="asha@college.edu">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="inp-dept">Department *</label>
+              <select id="inp-dept" class="form-control" onchange="validateLiveIdentifier()">
+                <option value="CS">CS — Computer Science (North)</option>
+                <option value="EE">EE — Electrical Eng (North)</option>
+                <option value="ME">ME — Mechanical Eng (South)</option>
+                <option value="CE">CE — Civil Eng (South)</option>
+                <option value="AD">AD — Administration (Admin)</option>
+                <option value="HR">HR — Human Resources (Admin)</option>
+                <option value="FN">FN — Finance (Admin)</option>
+                <option value="LB">LB — Library Wing (Library)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="inp-code">Ticket Identifier *</label>
+              <input type="text" id="inp-code" class="form-control mono" placeholder="CS-101-H" maxlength="8" autocomplete="off" spellcheck="false" oninput="validateLiveIdentifier()" required>
+            </div>
+          </div>
+
+          <!-- Silent Inline Validation Feedback Badge -->
+          <div id="id-feedback-box" class="id-feedback idle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span id="id-feedback-text">Expected format: 2-letter Dept, 3-digit Code, Priority H/M/L (e.g. CS-101-H)</span>
+          </div>
+
+          <div class="form-group" style="margin-top:14px;">
+            <label class="form-label" for="inp-desc">Issue Description *</label>
+            <textarea id="inp-desc" class="form-control" rows="4" placeholder="Describe the hardware, software, or network symptom in detail..." required oninput="validateLiveIdentifier()"></textarea>
+          </div>
+
+          <!-- File / Screenshot Attachment Dropper -->
+          <div class="form-group">
+            <label class="form-label">Attach Screenshot or Diagnostic Log (Optional, max 2MB)</label>
+            <div class="file-dropzone" onclick="document.getElementById('inp-file').click()">
+              <input type="file" id="inp-file" style="display:none;" onchange="handleFileSelect(event)">
+              <div style="font-size:12.5px; color:var(--ink-secondary);">
+                <span>📁 Click to browse or drop log file / screenshot</span>
+              </div>
+            </div>
+            <div id="attachment-preview"></div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+            <span style="font-size:12px; color:var(--ink-tertiary);">* Required fields</span>
+            <div style="display:flex; gap:10px;">
+              <button type="button" class="btn btn-secondary" onclick="fillSampleForm()">Use Sample</button>
+              <button type="submit" class="btn btn-primary" id="btn-submit">Submit Ticket</button>
+            </div>
+          </div>
+        </form>
+
+        <div id="submit-outcome" style="margin-top:18px; display:none;"></div>
+      </div>
+    `;
+  },
+
+  // 4. HANDLER WORKSPACE VIEW
+  handler: () => {
+    const tid = appState.selectedTeam;
+    const team = appState.teams[tid] || { avail: true, cap: 8 };
+    const cap = team.cap || 8;
+    const openTickets = appState.tickets.filter(t => t.team === tid && (t.status === 'Assigned' || t.status === 'In Progress'));
+    const openNum = openTickets.length;
+    const pct = Math.min(100, Math.round((openNum / cap) * 100));
+
+    return `
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Handler Workspace</h1>
+          <p class="page-desc">Manage assigned ticket queues, update execution status, and monitor team capacity.</p>
+        </div>
+      </div>
+
+      <!-- Team Selector Tabs -->
+      <div class="db-tabs" style="margin-bottom: 16px;">
+        ${[...TEAMS, 'L2'].map(id => `
+          <button class="db-tab ${id === tid ? 'active' : ''}" onclick="selectHandlerTeam('${id}')">
+            ${teamName(id)} (${openCount(id)}/${(appState.teams[id] && appState.teams[id].cap) || (id === 'L2' ? 10 : 8)})
+          </button>
+        `).join('')}
+      </div>
+
+      <!-- Team Capacity & Availability Control Strip -->
+      <div class="card" style="margin-bottom: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <h2 class="card-title" style="margin:0;">${teamName(tid)}</h2>
+              <span class="badge ${team.avail ? 'badge-resolved' : 'badge-fallback'}">${team.avail ? 'Available for Work' : 'Unavailable / Paused'}</span>
+            </div>
+            <div style="font-size:12.5px; color:var(--ink-secondary); margin-top:4px;">
+              Current Load: <b>${openNum}</b> open tickets of <b>${cap}</b> maximum capacity (${pct}% allocated)
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px;">
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
+              <input type="checkbox" ${team.avail ? 'checked' : ''} onchange="toggleTeamAvailability('${tid}', this.checked)">
+              <span>Available for dispatch</span>
+            </label>
+            <div style="border-left:1px solid var(--border-subtle); height:20px;"></div>
+            <label style="font-size:12.5px; color:var(--ink-secondary);">Capacity:</label>
+            <input type="number" min="1" max="99" value="${cap}" style="width:60px; padding:3px 6px; border:1px solid var(--border-subtle); border-radius:4px; font-size:12.5px;" onchange="updateTeamCapacity('${tid}', this.value)">
+          </div>
+        </div>
+
+        <div class="meter-track" style="margin-top:12px;">
+          <div class="meter-fill ${openNum >= cap ? 'danger' : (openNum >= cap - 1 ? 'warn' : '')}" style="width: ${pct}%;"></div>
+        </div>
+      </div>
+
+      <!-- Assigned Tickets Table -->
+      <div class="db-container">
+        <div class="db-toolbar">
+          <b style="font-size:13px; color:var(--ink-primary);">Assigned Tickets Queue (${openTickets.length} open)</b>
+        </div>
+        <div class="table-wrap">
+          <table class="db-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Identifier</th>
+                <th>Category</th>
+                <th>Zone</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Quick Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${openTickets.length === 0 ? `
+                <tr><td colspan="8" style="text-align:center; padding:32px 0; color:var(--ink-tertiary);">No open tickets assigned to ${teamName(tid)}.</td></tr>
+              ` : openTickets.map(t => `
+                <tr>
+                  <td><span class="mono" style="font-weight:600;" onclick="openDrawer('${t.id}')">${t.id}</span></td>
+                  <td><span class="mono" onclick="openDrawer('${t.id}')">${t.code}</span></td>
+                  <td><span class="tag-cat">${t.category}</span></td>
+                  <td>${t.zone || '—'}</td>
+                  <td>${priorityBadge(t.priority)}</td>
+                  <td>${statusBadge(t)}</td>
+                  <td style="color:var(--ink-secondary);">${fmtDate(t.created)}</td>
+                  <td>
+                    <select class="db-select" onchange="quickUpdateStatus('${t.id}', this.value)">
+                      <option value="Assigned" ${t.status === 'Assigned' ? 'selected' : ''}>Assigned</option>
+                      <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                      <option value="Resolved" ${t.status === 'Resolved' ? 'selected' : ''}>Mark Resolved</option>
+                    </select>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  },
+
+  // 5. ROUTING DATABASE VIEW
+  routing: () => {
+    const fallbackList = appState.tickets.filter(t => t.queue === 'fallback');
+    const overrideList = appState.tickets.filter(t => t.log && t.log.some(l => /override|escalated|backup/i.test(l)));
+
+    return `
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Routing Rules Database</h1>
+          <p class="page-desc">Explicit department and category routing matrix, central fallback queue, and escalation logs.</p>
+        </div>
+      </div>
+
+      <!-- Section 1: Fallback Queue Banner if any -->
+      ${fallbackList.length > 0 ? `
+        <div class="card" style="border: 1px solid var(--status-fallback-fg); background: var(--status-fallback-bg); margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 class="card-title" style="color:var(--status-fallback-fg);">Central Fallback Queue (${fallbackList.length} tickets)</h2>
+            <span style="font-size:12px; color:var(--ink-secondary);">Unknown departments / unmapped issue codes awaiting reassignment</span>
+          </div>
+          <div class="table-wrap" style="background:#fff; border-radius:6px; overflow:hidden;">
+            <table class="db-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Identifier</th>
+                  <th>Reason</th>
+                  <th>Submitted</th>
+                  <th>Manual Reassign</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${fallbackList.map(t => `
+                  <tr>
+                    <td><span class="mono" style="font-weight:600;" onclick="openDrawer('${t.id}')">${t.id}</span></td>
+                    <td><span class="mono">${t.code}</span></td>
+                    <td style="color:var(--status-fallback-fg);">${esc(t.log[t.log.length - 1] || 'Unmapped')}</td>
+                    <td>${fmtDate(t.created)}</td>
+                    <td>
+                      <select class="db-select" onchange="reassignTicket('${t.id}', this.value)">
+                        <option value="">Reassign to...</option>
+                        <option value="HD1">Helpdesk 1</option>
+                        <option value="HD2">Helpdesk 2</option>
+                        <option value="HD3">Helpdesk 3</option>
+                        <option value="HD4">Helpdesk 4</option>
+                        <option value="L2">Level-2</option>
+                      </select>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Section 2: Active Routing Matrix Table -->
+      <div class="db-container" style="margin-bottom:20px;">
+        <div class="db-toolbar">
+          <b style="font-size:13px; color:var(--ink-primary);">Configured Department Routing Table (MongoDB)</b>
+          <span style="font-size:12px; color:var(--ink-tertiary);">Department & Category $\\to$ Zone & Preferred Helpdesk Pool</span>
+        </div>
+        <div class="table-wrap">
+          <table class="db-table">
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th>Category</th>
+                <th>Zone</th>
+                <th>Preferred Team</th>
+                <th>Backup Teams</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${appState.routingRules.slice(0, 15).map(r => `
+                <tr>
+                  <td><b>${r.dept}</b></td>
+                  <td><span class="tag-cat">${r.category}</span></td>
+                  <td>${r.zone}</td>
+                  <td><span class="badge badge-assigned">${r.preferred}</span></td>
+                  <td style="color:var(--ink-secondary); font-size:12px;">${(r.backups || []).join(' → ')}</td>
+                  <td><span class="badge badge-resolved">Active</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 3: Escalations & Overrides Log -->
+      <div class="card">
+        <h2 class="card-title" style="margin-bottom:12px;">Escalations and Overrides Log</h2>
+        ${overrideList.length === 0 ? '<p style="color:var(--ink-tertiary); font-size:13px;">No priority overrides or escalations recorded yet.</p>' : `
+          <div class="table-wrap">
+            <table class="db-table">
+              <thead>
+                <tr>
+                  <th>Ticket</th>
+                  <th>Category</th>
+                  <th>Priority</th>
+                  <th>Routing Decision & Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${overrideList.map(t => `
+                  <tr onclick="openDrawer('${t.id}')">
+                    <td><span class="mono" style="font-weight:600;">${t.id}</span> (${t.code})</td>
+                    <td><span class="tag-cat">${t.category}</span></td>
+                    <td>${priorityBadge(t.priority)}</td>
+                    <td style="font-size:12.5px;">${esc(t.log.filter(l => /override|escalated|backup/i.test(l)).join('; '))}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      </div>
+    `;
+  },
+
+  // 6. ANALYTICS VIEW
+  analytics: () => {
+    const total = appState.tickets.length;
+    const resolved = appState.tickets.filter(t => t.status === 'Resolved').length;
+    const unres = total - resolved;
+    const deg = total > 0 ? (resolved / total) * 360 : 0;
+
+    // Counts by category
+    const catCounts = {};
+    CATS.forEach(c => catCounts[c] = 0);
+    appState.tickets.forEach(t => { if (t.category && catCounts[t.category] !== undefined) catCounts[t.category]++; });
+
+    // Counts by zone
+    const zoneCounts = {};
+    ZONES.forEach(z => zoneCounts[z] = 0);
+    appState.tickets.forEach(t => { if (t.zone && zoneCounts[t.zone] !== undefined) zoneCounts[t.zone]++; });
+
+    const maxCat = Math.max(1, ...Object.values(catCounts));
+    const maxZone = Math.max(1, ...Object.values(zoneCounts));
+
+    return `
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Service Analytics</h1>
+          <p class="page-desc">Resolution throughput, category density, and zonal ticket distributions.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Volume</div>
+          <div class="stat-value">${total}</div>
+          <div class="stat-sub">Lifetime submissions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Resolved Throughput</div>
+          <div class="stat-value" style="color:var(--status-resolved-fg);">${resolved}</div>
+          <div class="stat-sub">${total > 0 ? Math.round((resolved / total) * 100) : 0}% completion rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active / Pending</div>
+          <div class="stat-value">${unres}</div>
+          <div class="stat-sub">Work in progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rejected Format</div>
+          <div class="stat-value" style="color:var(--status-fallback-fg);">${appState.rejects.length}</div>
+          <div class="stat-sub">Failed DFA validation</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; align-items:start;">
+        <!-- Category Distribution -->
+        <div class="card">
+          <h2 class="card-title">Reports by Category</h2>
+          <div style="margin-top:14px;">
+            ${CATS.map(c => {
+              const v = catCounts[c] || 0;
+              const pct = Math.round((v / maxCat) * 100);
+              return `
+                <div class="bar-row">
+                  <span>${c}</span>
+                  <div class="meter-track"><div class="meter-fill" style="width:${pct}%;"></div></div>
+                  <b style="text-align:right;">${v}</b>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Zone Breakdown -->
+        <div class="card">
+          <h2 class="card-title">Reports by Zone</h2>
+          <div style="margin-top:14px;">
+            ${ZONES.map(z => {
+              const v = zoneCounts[z] || 0;
+              const pct = Math.round((v / maxZone) * 100);
+              return `
+                <div class="bar-row">
+                  <span style="font-size:11.5px;">${z}</span>
+                  <div class="meter-track"><div class="meter-fill" style="width:${pct}%;"></div></div>
+                  <b style="text-align:right;">${v}</b>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Resolution Ratio -->
+      <div class="card">
+        <h2 class="card-title">Resolution Ratio</h2>
+        <div class="donut-wrap">
+          <div class="donut-circle" style="background: conic-gradient(var(--status-resolved-fg) 0 ${deg}deg, var(--border-subtle) ${deg}deg 360deg);">
+            <div class="donut-inner">${total > 0 ? Math.round((resolved / total) * 100) : 0}%</div>
+          </div>
+          <div>
+            <div style="font-size:13px; line-height:1.8;">
+              <div>Resolved Incidents: <b>${resolved}</b></div>
+              <div>Unresolved / Pending: <b>${unres}</b></div>
+              <div>Format Validation Rejections: <b>${appState.rejects.length}</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  // 7. SETTINGS VIEW
+  settings: () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    return `
+      <div class="page-header" style="max-width:640px; margin:0 auto 24px;">
+        <div>
+          <h1 class="page-title">Workspace Settings</h1>
+          <p class="page-desc">Theme appearance, data controls, and system configuration.</p>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:640px; margin:0 auto 20px;">
+        <h2 class="card-title">Appearance & Theme</h2>
+        <p style="font-size:12.5px; color:var(--ink-secondary); margin-bottom:14px;">Select your preferred interface color mode.</p>
+        
+        <div style="display:flex; gap:12px;">
+          <button class="btn ${currentTheme === 'light' ? 'btn-primary' : 'btn-secondary'}" onclick="setAppTheme('light')">Light (Warm Neutral)</button>
+          <button class="btn ${currentTheme === 'dark' ? 'btn-primary' : 'btn-secondary'}" onclick="setAppTheme('dark')">Dark (Obsidian)</button>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:640px; margin:0 auto 20px;">
+        <h2 class="card-title">Demo & Seeding Tools</h2>
+        <p style="font-size:12.5px; color:var(--ink-secondary); margin-bottom:14px;">Populate the database with sample tickets covering all categories, edge cases, and priorities.</p>
+        
+        <div style="display:flex; gap:12px;">
+          <button class="btn btn-secondary" onclick="seedDemo()">Populate 14 Sample Reports</button>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:640px; margin:0 auto; border-color: var(--status-fallback-bg);">
+        <h2 class="card-title" style="color:var(--status-fallback-fg);">Reset Workspace Data</h2>
+        <p style="font-size:12.5px; color:var(--ink-secondary); margin-bottom:14px;">Wipes all tickets and rejects, and resets team capacities back to 8 (HD1–HD4) and 10 (Level-2).</p>
+        
+        <button class="btn" style="background:var(--status-fallback-bg); color:var(--status-fallback-fg); border:1px solid var(--status-fallback-fg);" onclick="confirmReset()">Reset All Data</button>
+      </div>
+    `;
+  }
+};
+
+/* ==========================================================================
+   Interactive Handlers, Live Validation & Actions
+   ========================================================================== */
+
+function setAppTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('theme', t);
+  renderView();
+}
+
+function setViewMode(mode) {
+  appState.viewMode = mode;
+  renderView();
+}
+
+// Router & View Switcher
+function renderView() {
+  const hash = location.hash.slice(1) || 'home';
+  appState.activeView = Views[hash] ? hash : 'home';
+
+  // Update nav links
+  document.querySelectorAll('.nav-link').forEach(el => {
+    el.classList.toggle('active', el.getAttribute('data-view') === appState.activeView);
+  });
+
+  // Update topbar breadcrumb
+  const titles = { home: 'Home', tickets: 'My Tickets', submit: 'Submit Report', handler: 'Handler Desk', routing: 'Routing Rules', analytics: 'Analytics', settings: 'Settings' };
+  const tbName = document.getElementById('topbar-view-name');
+  if (tbName) tbName.textContent = titles[appState.activeView] || 'Workspace';
+
+  // Render view template
+  const container = document.getElementById('main-content');
+  if (container && Views[appState.activeView]) {
+    container.innerHTML = Views[appState.activeView]();
+  }
+}
+
+// File Attachment Handler
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('File size exceeds 2MB limit');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    appState.stagedAttachment = {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      data: ev.target.result
+    };
+    const prev = document.getElementById('attachment-preview');
+    if (prev) {
+      prev.innerHTML = `
+        <div class="attachment-chip">
+          <span>📎 ${esc(file.name)} (${Math.round(file.size / 1024)} KB)</span>
+          <button type="button" class="icon-btn" style="padding:1px;" onclick="removeAttachment()">×</button>
+        </div>
+      `;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeAttachment() {
+  appState.stagedAttachment = null;
+  const prev = document.getElementById('attachment-preview');
+  if (prev) prev.innerHTML = '';
+}
+
+// Live Silent Validation on Submit Page
+function validateLiveIdentifier() {
+  const codeEl = document.getElementById('inp-code');
+  const descEl = document.getElementById('inp-desc');
+  const fbBox = document.getElementById('id-feedback-box');
+  const fbText = document.getElementById('id-feedback-text');
+  if (!codeEl || !fbBox) return;
+
+  const raw = codeEl.value.trim().toUpperCase();
+  if (!raw) {
+    fbBox.className = 'id-feedback idle';
+    fbText.textContent = 'Expected format: 2-letter Dept, 3-digit Code, Priority H/M/L (e.g. CS-101-H)';
+    return;
+  }
+
+  const dfaRes = dfaRun(raw);
+  const rxRes = RX.test(raw);
+
+  if (!dfaRes.ok || !rxRes) {
+    fbBox.className = 'id-feedback invalid';
+    fbText.textContent = dfaRes.reason || 'Invalid identifier structure';
+  } else {
+    const parts = raw.split('-');
+    const cls = classify(parts[1], descEl ? descEl.value : '');
+    fbBox.className = 'id-feedback valid';
+    fbText.innerHTML = `✓ Valid Identifier: Category <b>${cls.category || 'Unmapped'}</b> · Priority <b>${{H:'High', M:'Medium', L:'Low'}[parts[2]]}</b> · Zone <b>${DEPTS[parts[0]] || 'Unknown'}</b>`;
+  }
+}
+
+function fillSampleForm() {
+  const samples = [
+    { code: 'CS-101-H', desc: 'Workstation in computer lab 2 fails to power on after storm' },
+    { code: 'EE-205-M', desc: 'Install lab simulation software license key on instructor PC' },
+    { code: 'ME-310-H', desc: 'Wi-Fi access point offline across mechanical workshop' },
+    { code: 'AD-402-L', desc: 'Password reset requested for administrative payroll account' },
+    { code: 'HR-520-L', desc: 'Printer paper jam in human resources front desk' }
+  ];
+  const item = samples[Math.floor(Math.random() * samples.length)];
+  const nameEl = document.getElementById('inp-name');
+  const codeEl = document.getElementById('inp-code');
+  const descEl = document.getElementById('inp-desc');
+  const deptEl = document.getElementById('inp-dept');
+
+  if (nameEl) nameEl.value = 'Divya Hegde';
+  if (codeEl) codeEl.value = item.code;
+  if (descEl) descEl.value = item.desc;
+  if (deptEl) deptEl.value = item.code.split('-')[0];
+  validateLiveIdentifier();
+}
+
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById('inp-name').value.trim();
+  const email = document.getElementById('inp-email').value.trim();
+  const code = document.getElementById('inp-code').value.trim().toUpperCase();
+  const desc = document.getElementById('inp-desc').value.trim();
+  const outcomeEl = document.getElementById('submit-outcome');
+  const btn = document.getElementById('btn-submit');
+
+  if (btn) btn.disabled = true;
+
+  try {
+    const payload = {
+      name,
+      email,
+      code,
+      desc,
+      attachments: appState.stagedAttachment ? [appState.stagedAttachment] : []
+    };
+    const res = await fetch('/api/tickets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (!data.ok) {
+      outcomeEl.style.display = 'block';
+      outcomeEl.innerHTML = `<div style="padding:10px 14px; border-radius:6px; background:var(--status-fallback-bg); color:var(--status-fallback-fg); font-size:13px;">${esc(data.reason)}</div>`;
+    } else {
+      const t = data.ticket;
+      outcomeEl.style.display = 'block';
+      outcomeEl.innerHTML = `
+        <div style="padding:14px 18px; border-radius:6px; background:var(--status-resolved-bg); color:var(--status-resolved-fg); font-size:13px;">
+          <b>Report ${t.id} Submitted Successfully!</b><br>
+          <span style="color:var(--ink-secondary); font-size:12px;">Category <b>${t.category}</b> · Priority <b>${t.priority}</b> · Routed to: <b>${t.team ? teamName(t.team) : (t.queue === 'fallback' ? 'Central Fallback Queue' : 'Waiting Queue')}</b></span>
+          <div style="margin-top:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="openDrawer('${t.id}')">Inspect Ticket Details</button>
+          </div>
+        </div>
+      `;
+      // Clear form & attachment
+      document.getElementById('inp-code').value = '';
+      document.getElementById('inp-desc').value = '';
+      removeAttachment();
+      validateLiveIdentifier();
+      await fetchState();
+    }
+  } catch (err) {
+    showToast('Network error while submitting report');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// Table Controls
+function setTableTab(tab) {
+  appState.tableFilter.viewTab = tab;
+  appState.tableFilter.page = 1;
+  renderView();
+}
+function setTableSearch(v) {
+  appState.tableFilter.search = v;
+  appState.tableFilter.page = 1;
+  renderView();
+}
+function setTableFilterProp(prop, val) {
+  appState.tableFilter[prop] = val;
+  appState.tableFilter.page = 1;
+  renderView();
+}
+function changePage(delta) {
+  appState.tableFilter.page += delta;
+  renderView();
+}
+
+// Slide-Over Drawer with Reopen & Attachment Support
+function openDrawer(id) {
+  const t = appState.tickets.find(x => x.id === id);
+  if (!t) return;
+
+  appState.activeTicketId = id;
+  document.getElementById('d-id').textContent = t.id;
+  document.getElementById('d-status-badge').innerHTML = statusBadge(t);
+
+  const bodyEl = document.getElementById('d-body');
+  const events = t.events && t.events.length ? t.events : (t.log || []).map(l => ({ label: l, note: '', time: t.created }));
+
+  bodyEl.innerHTML = `
+    <div style="margin-bottom:18px;">
+      <h3 style="font-size:15px; font-weight:600; color:var(--ink-primary);">${esc(t.desc)}</h3>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <span class="tag-cat">${t.category || 'Unmapped'}</span>
+        ${priorityBadge(t.priority)}
+        <span class="mono" style="font-size:12px; color:var(--ink-secondary); background:var(--bg-subtle); padding:1px 6px; border-radius:4px;">${t.code}</span>
+      </div>
+    </div>
+
+    <!-- Attachments Display -->
+    ${t.attachments && t.attachments.length ? `
+      <div style="margin-bottom:16px;">
+        <label class="form-label">Attached Files (${t.attachments.length})</label>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          ${t.attachments.map(a => `
+            <a href="${a.data}" download="${esc(a.name)}" class="attachment-chip" style="text-decoration:none;">
+              <span>💾 ${esc(a.name)} (${Math.round(a.size / 1024)} KB)</span>
+            </a>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    <div style="border-top:1px solid var(--border-subtle); border-bottom:1px solid var(--border-subtle); padding:14px 0; margin-bottom:16px;">
+      <div class="drawer-prop"><span class="drawer-prop-name">Reporter</span><span class="drawer-prop-val">${esc(t.name)} ${t.email ? `(${esc(t.email)})` : ''}</span></div>
+      <div class="drawer-prop"><span class="drawer-prop-name">Department</span><span class="drawer-prop-val">${t.dept} · ${t.zone || 'Unknown Zone'}</span></div>
+      <div class="drawer-prop"><span class="drawer-prop-name">Handler</span><span class="drawer-prop-val">${t.team ? teamName(t.team) : (t.queue === 'fallback' ? 'Central Fallback Queue' : 'Waiting Queue')}</span></div>
+      <div class="drawer-prop"><span class="drawer-prop-name">Submitted</span><span class="drawer-prop-val">${fmtDate(t.created)}</span></div>
+      ${t.resolved ? `<div class="drawer-prop"><span class="drawer-prop-name">Resolved</span><span class="drawer-prop-val">${fmtDate(t.resolved)}</span></div>` : ''}
+    </div>
+
+    <!-- Quick Status Transition & Reopen Controls -->
+    <div style="margin-bottom:20px;">
+      <label class="form-label">Update Status</label>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        ${t.status === 'Resolved' ? `
+          <button class="btn btn-secondary btn-sm" onclick="quickUpdateStatus('${t.id}', 'In Progress', 'Reopened by user')">🔄 Reopen Ticket</button>
+        ` : `
+          <button class="btn btn-secondary btn-sm" onclick="quickUpdateStatus('${t.id}', 'Assigned')" ${t.status === 'Assigned' ? 'style="font-weight:700; border-color:var(--accent-primary);"' : ''}>Assigned</button>
+          <button class="btn btn-secondary btn-sm" onclick="quickUpdateStatus('${t.id}', 'In Progress')" ${t.status === 'In Progress' ? 'style="font-weight:700; border-color:var(--accent-primary);"' : ''}>In Progress</button>
+          <button class="btn btn-primary btn-sm" onclick="promptResolveTicket('${t.id}')">Mark Resolved</button>
+        `}
+      </div>
+    </div>
+
+    <!-- Structured Audit Timeline -->
+    <h4 style="font-size:13px; font-weight:600; color:var(--ink-primary); margin-bottom:10px;">Lifecycle History</h4>
+    <div class="timeline">
+      ${events.map(ev => `
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-label">${esc(ev.label || ev.type)}</div>
+          ${ev.note ? `<div class="timeline-note">${esc(ev.note)}</div>` : ''}
+          <div class="timeline-time">${fmtDate(ev.time)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  document.getElementById('drawer-backdrop').classList.add('open');
+  document.getElementById('ticket-drawer').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer-backdrop').classList.remove('open');
+  document.getElementById('ticket-drawer').classList.remove('open');
+  appState.activeTicketId = null;
+}
+
+// Quick Actions
+async function quickUpdateStatus(id, st, note = '') {
+  try {
+    const res = await fetch(`/api/tickets/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: st, note })
+    });
+    const d = await res.json();
+    if (d.ok) {
+      showToast(`Ticket ${id} marked as ${st}`);
+      await fetchState();
+      renderView();
+      if (appState.activeTicketId === id) openDrawer(id);
+    } else {
+      showToast(d.reason || 'Failed to update status');
+    }
+  } catch (err) {
+    showToast('Failed to update ticket status');
+  }
+}
+
+function promptResolveTicket(id) {
+  const note = prompt('Optional resolution note (e.g., "Replaced HDMI cable in lab"):', 'Issue resolved and verified');
+  if (note !== null) {
+    quickUpdateStatus(id, 'Resolved', note);
+  }
+}
+
+async function reassignTicket(id, targetTeam) {
+  if (!targetTeam) return;
+  try {
+    const res = await fetch(`/api/tickets/${id}/reassign`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ team: targetTeam, reason: 'Operator reassignment from Routing view' })
+    });
+    const d = await res.json();
+    if (d.ok) {
+      showToast(`Ticket ${id} reassigned to ${teamName(targetTeam)}`);
+      await fetchState();
+      renderView();
+    } else {
+      showToast(d.reason || 'Reassignment failed');
+    }
+  } catch (err) {
+    showToast('Network error during reassignment');
+  }
+}
+
+function selectHandlerTeam(tid) {
+  appState.selectedTeam = tid;
+  renderView();
+}
+
+async function toggleTeamAvailability(tid, avail) {
+  try {
+    await fetch(`/api/teams/${tid}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avail })
+    });
+    showToast(`${teamName(tid)} availability set to ${avail ? 'Active' : 'Paused'}`);
+    await fetchState();
+    renderView();
+  } catch (err) {
+    showToast('Failed to update availability');
+  }
+}
+
+async function updateTeamCapacity(tid, cap) {
+  const c = parseInt(cap, 10);
+  if (isNaN(c) || c < 0) return;
+  try {
+    await fetch(`/api/teams/${tid}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cap: c })
+    });
+    showToast(`${teamName(tid)} capacity updated to ${c}`);
+    await fetchState();
+    renderView();
+  } catch (err) {
+    showToast('Failed to update capacity');
+  }
+}
+
+// Demo Data Seeder
+const DEMO_ITEMS = [
+  ['CS-101-H', 'Workstation in computer lab 2 fails to boot after system update'],
+  ['EE-205-M', 'MATLAB campus license activation fails on lab PC'],
+  ['ME-310-H', 'Campus Wi-Fi connectivity outage in mechanical workshop'],
+  ['AD-402-L', 'Password reset requested for administrative payroll portal'],
+  ['HR-520-L', 'Request for replacement toner cartridge at reception'],
+  ['CS-150-M', 'Monitor color flickering intermittently in lab 3'],
+  ['FN-330-M', 'VPN connection drops every 5 minutes during remote work'],
+  ['LB-210-L', 'Office word processor crashes immediately upon document launch'],
+  ['CE-777-M', 'Unknown sensor telemetry inquiry from structural site office'],
+  ['ZZ-101-H', 'Laptop display screen cracked in transit'],
+  ['EE-401-H', 'Student portal account locked before semester examination'],
+  ['ME-130-L', 'Sticky keys on lab workstation keyboard'],
+  ['AD-305-M', 'Network switch port dead in departmental server room'],
+  ['CS-102-L', 'Mouse optical sensor unresponsive on desktop']
+];
+const DEMO_NAMES = ['Asha Rao', 'Kiran Shetty', 'Meera Nair', 'Rahul Gowda', 'Divya Hegde'];
+
+async function seedDemo() {
+  try {
+    const payload = DEMO_ITEMS.map(([c, d], i) => ({
+      name: DEMO_NAMES[i % DEMO_NAMES.length],
+      code: c,
+      desc: d
+    }));
+    const res = await fetch('/api/demo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: payload })
+    });
+    const d = await res.json();
+    showToast(`Loaded ${d.count || 14} demo reports`);
+    await fetchState();
+    location.hash = '#tickets';
+  } catch (err) {
+    showToast('Failed to load demo data');
+  }
+}
+
+async function confirmReset() {
+  if (confirm('Are you sure you want to wipe all tickets and reset team capacities?')) {
+    try {
+      await fetch('/api/reset', { method: 'POST' });
+      showToast('Workspace reset to defaults');
+      await fetchState();
+      location.hash = '#home';
+      renderView();
+    } catch (err) {
+      showToast('Failed to reset workspace');
+    }
+  }
+}
+
+// Setup Event Listeners
+window.addEventListener('hashchange', renderView);
+window.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+    location.hash = '#tickets';
+    setTimeout(() => {
+      const el = document.getElementById('ticket-table-search');
+      if (el) el.focus();
+    }, 100);
+  }
+  if (e.key === 'Escape') closeDrawer();
+});
+
+// Sidebar Collapsible Controller
+const sidebar = document.getElementById('sidebar');
+const toggleBtn = document.getElementById('sidebar-toggle-btn');
+const closeBtn = document.getElementById('sidebar-close-btn');
+
+function toggleSidebar() {
+  sidebar.classList.toggle('collapsed');
+}
+if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+
+// Theme Toggle Button
+const themeBtn = document.getElementById('theme-toggle-btn');
+if (themeBtn) {
+  themeBtn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme') || 'light';
+    setAppTheme(cur === 'light' ? 'dark' : 'light');
+  });
+}
+
+// Initialization & Start SSE Real-Time Sync
+(async function init() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+  await fetchState();
+  renderView();
+  setupLiveStream();
+})();
+</script>
+</body>
+</html>

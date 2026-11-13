@@ -1,0 +1,8 @@
+{
+  "name": "helpdesk-ticket-router",
+  "version": "1.0.0",
+  "description": "IT Helpdesk Ticket Router: Express + MongoDB backend with DFA/regex validation, routing table and dispatch",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "dev": "node --watch server.js" },
+  "dependencies": { "express": "^4.19.2", "mongoose": "^8.5.0" }
+}

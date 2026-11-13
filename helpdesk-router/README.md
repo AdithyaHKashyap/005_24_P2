@@ -1,140 +1,266 @@
-# IT Helpdesk Ticket Router
+<div align="center">
 
-A modern, production-grade IT Helpdesk Ticket Router designed as a **Notion-inspired minimalist operations workspace**. The application accepts structured incident reports, performs real-time identifier validation using a Deterministic Finite Automaton (DFA) and regular expression, classifies issues into exactly five categories, consults an explicit MongoDB routing table, checks team availability and capacity (max 8 open tickets per team), and dispatches tickets using round-robin and priority override rules.
+# ⚡ IT Helpdesk Ticket Router
 
----
+### A Premium Notion-Inspired ITSM Operations Workspace
 
-## 1. Key Features & Interfaces
+[![Node.js Version](https://img.shields.io/badge/Node.js-v18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-v4.19-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-v8.3-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Real-Time Sync](https://img.shields.io/badge/Live_Sync-SSE_Stream-2383E2?style=for-the-badge&logo=lightning&logoColor=white)](#-real-time-sse-stream)
+[![Architecture](https://img.shields.io/badge/Design-Notion_Minimalist-F7F6F3?style=for-the-badge&logo=notion&logoColor=black)](#-interface-design--features)
 
-The frontend is built as a distraction-free, responsive SaaS workspace with warm neutrals, Inter typography, and light/dark theme support:
+<p align="center">
+  <b>A production-grade IT Service Management (ITSM) web application built with a distraction-free, Notion-inspired aesthetic.</b><br>
+  Features silent deterministic automata verification, a 5-category precedence classifier, explicit MongoDB routing rules, 8-ticket team capacity controls, and real-time multi-client live sync.
+</p>
 
-* **Operations Home:**
-  * High-level operational overview with 4 KPI callout cards (*Active Tickets*, *Resolution Rate*, *Central Fallback Queue*, *Waiting Queue*).
-  * Recent activity feed and real-time team workload utilization tracks.
-  * Instant alert banner when tickets require manual fallback routing.
-* **My Tickets Database:**
-  * Notion-style database table with instant search (press `/` shortcut).
-  * Multi-property filter bar for **Category** (*Hardware, Software, Network, Access, Other*), **Priority** (*High, Med, Low*), and **Status** (*Pending, Assigned, In Progress, Resolved*).
-  * Filter tabs: *All Tickets*, *Needs Attention*, and *Resolved*.
-  * Built-in pagination with configurable page sizes.
-  * **Slide-over Ticket Drawer:** Clicking any row opens an inspector panel displaying ticket details, quick status updates (*Assigned $\to$ In Progress $\to$ Resolved*), and a complete chronological event lifecycle timeline.
-* **Submit Report:**
-  * Minimalist, centered form with silent real-time validation.
-  * As the user types, the structured identifier (`DEPT-ISSUE-PRIORITY`, e.g., `CS-101-H`) is verified silently against the DFA and Regex, surfacing an immediate green verification badge or format guidance.
-  * Zero academic laboratory clutter or theory diagrams in the user interface.
-* **Handler Workspace:**
-  * Dedicated workbench with tabs for **HD1**, **HD2**, **HD3**, **HD4**, and **Level-2 Escalation**.
-  * Real-time capacity meter enforcing the 8 open ticket limit (e.g. `5 of 8 open tickets — 62%`) with amber threshold warnings and red overflow guards.
-  * Team availability toggle switch (Active / Paused).
-  * Deterministic queue ordering (High priority first, then oldest submission time).
-* **Routing Database:**
-  * Explicit routing matrix stored in MongoDB (40 rules mapping department and category to operational zones and preferred helpdesk teams).
-  * **Central Fallback Queue:** Catches tickets with unmapped issue codes or unknown departments, with a one-click operator reassignment action.
-  * **Escalations and Overrides Log:** Audit trail for emergency Level-2 bypasses and capacity overflow re-routes.
-* **Service Analytics:**
-  * Executive ITSM analytics without visual clutter.
-  * Category volume distribution bars with exact counts and percentages.
-  * Zonal density breakdown across *North Block*, *South Block*, *Admin Block*, and *Library Wing*.
-  * Clean SVG Resolution Ratio donut chart.
-* **Settings:**
-  * Theme switcher: **Light (Warm Neutral)**, **Dark (Obsidian)**, and System match.
-  * One-click demo data seeder (loads 14 realistic support tickets).
-  * Workspace data reset button.
+[Quick Start](#-quick-start) • [Core Features](#-interface-design--features) • [Architecture](#-system-architecture) • [Algorithms](#-core-algorithms) • [API Spec](#-rest-api-reference)
 
 ---
 
-## 2. Core Architecture & Algorithms
+</div>
 
-All algorithms are deterministic, pure, and thoroughly tested:
+## 🌟 Highlights
 
-1. **Ticket Identifier Grammar (DFA & Regex):**
-   * Pattern: Exactly 8 characters `^[A-Z]{2}-[0-9]{3}-[HML]$` (e.g. `CS-101-H`).
-   * State Machine: $q_0 \to q_8$ (accepting) with dead state $X$ on any invalid character.
-   * DFA and Regex produce 100% identical outcomes across all valid and invalid inputs.
-2. **5-Category Issue Classification:**
-   * Numerical issue code base ranges:
-     * `100–199` $\to$ Hardware
-     * `200–299` $\to$ Software
-     * `300–399` $\to$ Network
-     * `400–499` $\to$ Access
-     * `500–599` $\to$ Other
-   * Keyword pattern matching with strict conflict resolution precedence:
-     $$\text{Network} > \text{Access} > \text{Hardware} > \text{Software} > \text{Other}$$
-3. **Explicit Database Routing & Capacity Management:**
-   * 4 Tier-1 teams (`HD1`, `HD2`, `HD3`, `HD4`) with a strict maximum capacity of **8 open tickets** each.
-   * 1 Tier-2 escalation team (`L2`) with capacity of 10.
-   * Round-robin scheduling rotates across the eligible pool for the matched route.
-   * Teams at capacity ($\ge 8$) or marked unavailable are automatically skipped in favor of configured backup teams.
-   * High-priority Network outages immediately bypass Tier-1 and route directly to Level-2 (`L2`).
-   * When all eligible teams are full, tickets are placed in a priority-sorted Waiting Queue.
-
----
-
-## 3. Technology Stack
-
-* **Backend:** Node.js, Express.js.
-* **Database:** MongoDB, Mongoose ODM (`mongodb://127.0.0.1:27017/helpdesk`).
-* **Frontend:** Modern reactive single-page architecture with Notion-inspired design tokens, Inter & IBM Plex Mono typography, and CSS variables.
-* **Icons & Visuals:** Pure SVG iconography, accessible status pills, and CSS/SVG charts.
-
----
-
-## 4. Quick Start
-
-### Prerequisites
-* [Node.js](https://nodejs.org/) (v18 or newer)
-* [MongoDB](https://www.mongodb.com/) running locally on port `27017`
-
-### Installation & Startup
-
-1. Open your terminal in the `helpdesk-router` directory:
-   ```bash
-   cd helpdesk-router
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the application server:
-   ```bash
-   npm start
-   ```
-
-4. Open your browser and navigate to:
-   ```text
-   http://localhost:4000
-   ```
-
-5. Click **"Load Demo"** in the topbar to populate 14 realistic tickets and explore all views.
+<table>
+  <tr>
+    <td width="50%">
+      <h3>📋 Notion-Style Database & Kanban</h3>
+      <p>Seamlessly toggle between a spreadsheet-style <b>Database Table</b> (with search, property filters, and pagination) and a <b>Kanban Board View</b> organized by operational status.</p>
+    </td>
+    <td width="50%">
+      <h3>⚡ Real-Time SSE Multi-Client Sync</h3>
+      <p>Instant Server-Sent Events (SSE) broadcast updates across all connected browsers in real time without manual page refreshes or polling lag.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>🔍 Silent Automata Validation</h3>
+      <p>Validates structured device identifiers (<code>DEPT-ISSUE-PRIORITY</code>, e.g. <code>CS-101-H</code>) in real time using a <b>Deterministic Finite Automaton (DFA)</b> and equivalent <b>Regular Expression</b> without exposing academic clutter.</p>
+    </td>
+    <td width="50%">
+      <h3>🛡️ Strict 8-Ticket Capacity Guards</h3>
+      <p>Strictly caps open workloads across 4 Tier-1 Helpdesk teams (<b>HD1–HD4</b>) at <b>8 open tickets</b>. Automatically routes overflow to Level-2 escalation or waiting queues.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>📑 Slide-Over Ticket Drawer</h3>
+      <p>Clicking any ticket smoothly reveals a right-hand inspection drawer featuring complete chronological audit timelines, quick status progression buttons, and attached files.</p>
+    </td>
+    <td width="50%">
+      <h3>📎 Diagnostic Attachments & CSV Export</h3>
+      <p>Upload screenshots and diagnostic log files (up to 2MB) directly with incident reports, and export clean, formatted RFC-4180 CSV reports in one click.</p>
+    </td>
+  </tr>
+</table>
 
 ---
 
-## 5. REST API Specification
+## 🏛️ System Architecture
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/state` | Returns all tickets, rejects, team loads, and routing rules |
-| `POST` | `/api/tickets` | Validates identifier (DFA/Regex), classifies, routes, and creates report |
-| `PATCH` | `/api/tickets/:id` | Updates ticket status (`Assigned`, `In Progress`, `Resolved`) |
-| `POST` | `/api/tickets/:id/reassign` | Reassigns ticket to target team with audit event |
-| `PATCH` | `/api/teams/:id` | Updates team availability (`avail: boolean`) or capacity (`cap: number`) |
-| `GET` | `/api/routing-rules` | Returns active department and category routing rules |
-| `PATCH` | `/api/routing-rules/:id`| Updates preferred team or backup configuration for a rule |
-| `POST` | `/api/demo` | Seeds 14 realistic sample tickets across all categories |
-| `POST` | `/api/reset` | Resets all tickets and restores default team capacities |
+```mermaid
+flowchart TD
+    subgraph Client["Notion-Inspired Workspace (Browser)"]
+        UI["Reactive Single-Page App"]
+        SSE["SSE Live Sync Stream"]
+    end
+
+    subgraph Server["Node.js + Express Backend"]
+        VAL["Dual Validator (DFA $q_0 \\to q_8$ & Regex)"]
+        CLS["5-Category Precedence Classifier"]
+        ROUTER["Explicit MongoDB Routing Table (40 Rules)"]
+        DISPATCH["Deterministic Dispatch & Capacity Check ($\\le 8$)"]
+        BROADCAST["SSE Event Broadcaster"]
+    end
+
+    subgraph Database["MongoDB Storage (Local / Atlas)"]
+        TICKETS[("Tickets & Event Timelines")]
+        TEAMS[("Teams HD1-HD4 & L2")]
+        RULES[("Routing Rules")]
+        REJECTS[("Validation Rejections")]
+    end
+
+    UI -->|"POST /api/tickets"| VAL
+    VAL -->|"Valid Format"| CLS
+    CLS -->|"Detected Category"| ROUTER
+    ROUTER -->|"Match Pool"| DISPATCH
+    DISPATCH -->|"Atomic Reservation"| TICKETS
+    DISPATCH -->|"Check Capacity"| TEAMS
+    DISPATCH --> BROADCAST
+    BROADCAST -.->|"Real-Time Push"| SSE
+```
 
 ---
 
-## 6. Project Structure
+## 🔬 Core Algorithms
+
+The engine (`engine.js`) provides pure, deterministic algorithmic verification:
+
+### 1. Deterministic Finite Automaton (DFA) & Regex
+
+* **Identifier Format:** Exactly 8 characters `DEPT-ISSUE-PRIORITY` (e.g., `CS-101-H`).
+* **Equivalent Regular Expression:**
+  ```regex
+  ^[A-Z]{2}-[0-9]{3}-[HML]$
+  ```
+* **State Transition Table:**
+
+| State | Input Character | Next State | Description |
+|:---:|:---:|:---:|---|
+| **$q_0$** | `A–Z` | $q_1$ | First department letter |
+| **$q_1$** | `A–Z` | $q_2$ | Second department letter |
+| **$q_2$** | `-` | $q_3$ | First delimiter hyphen |
+| **$q_3$** | `0–9` | $q_4$ | First issue digit |
+| **$q_4$** | `0–9` | $q_5$ | Second issue digit |
+| **$q_5$** | `0–9` | $q_6$ | Third issue digit |
+| **$q_6$** | `-` | $q_7$ | Second delimiter hyphen |
+| **$q_7$** | `H`, `M`, `L` | **$q_8$ (Accepting)** | Priority level |
+| *Any* | *Any other char* | **$X$ (Dead State)** | Immediate rejection with exact position & reason |
+
+> **Agreement Guarantee:** Both the DFA and Regex evaluate every submission and produce 100% identical validation outcomes across all valid and boundary inputs.
+
+---
+
+### 2. Five-Category Issue Classifier with Precedence
+
+Reports are classified into exactly five categories based on issue code ranges (100–599) and contextual description keywords:
+
+* `100–199` $\to$ **Hardware** (*laptop, computer, screen, monitor, keyboard, printer*)
+* `200–299` $\to$ **Software** (*install, license, application, update, crash, office*)
+* `300–399` $\to$ **Network** (*wi-fi, network, internet, lan, vpn, router, switch*)
+* `400–499` $\to$ **Access** (*password, login, account, locked, permission*)
+* `500–599` $\to$ **Other** (*general requests, consumables*)
+
+#### Conflict Resolution Precedence Order
+When a report's issue code and description keywords match different categories, the system applies strict, deterministic conflict resolution:
+$$\mathbf{Network} \succ \mathbf{Access} \succ \mathbf{Hardware} \succ \mathbf{Software} \succ \mathbf{Other}$$
+
+---
+
+### 3. Explicit Routing, Capacity Limits & Overrides
+
+* **4 Helpdesk Teams:** `HD1`, `HD2`, `HD3`, `HD4` strictly capped at **8 open tickets** (`Assigned` or `In Progress`).
+* **Level-2 Escalation Team:** `L2` capped at **10 open tickets**.
+* **Emergency Priority Override:** High-priority (`H`) Network tickets immediately bypass Tier-1 and route directly to Level-2 (`L2`).
+* **Round-Robin Scheduling:** Rotates deterministically across eligible teams within the matched department/category pool.
+* **Central Fallback Queue:** Reports with unmapped codes or unknown departments enter the Fallback Queue for one-click operator reassignment.
+* **Waiting Queue:** If all eligible teams reach capacity (8 tickets), reports wait in a deterministic priority-sorted queue ($H \succ M \succ L \succ \text{Submission Time}$).
+
+---
+
+## 🖥️ Interface Design & Features
+
+Designed with a warm-neutral aesthetic inspired by Notion and Linear:
 
 ```text
-helpdesk-router/
-├── engine.js          # Pure algorithmic engine (DFA, Regex, Classification, Conflict Precedence)
-├── server.js          # Express server, Mongoose models, dispatch logic, REST APIs
-├── package.json       # Project dependencies (Express, Mongoose)
-├── README.md          # Project documentation and user guide
-└── public/
-    └── index.html     # Notion-inspired workspace frontend (Home, Tickets, Submit, Handler, Routing, Analytics, Settings)
++------------------------------------------------------------------------------------------+
+| [=] Sidebar Toggle  /  Workspace Navigation Breadcrumb             [Search (/)] [Live ●] |
++------------------+-----------------------------------------------------------------------+
+| SIDEBAR          | MAIN WORKSPACE CANVAS                                                 |
+|                  |                                                                       |
+| [H] Helpdesk     | Operations Home / My Tickets / Submit / Handler / Routing / Analytics |
+| IT Operations    | --------------------------------------------------------------------- |
+|                  | Stat Cards: [Active Tickets] [Resolution Rate] [Fallback] [Capacity]  |
+| Overview         | --------------------------------------------------------------------- |
+| - Home           | Notion Database Table / Kanban Board View                             |
+| - My Tickets     |                                                                       |
+| - Submit Report  | [TKT-0001] [CS-101-H] [Hardware] [High] [● Assigned] [HD1] [2h ago]   |
+|                  | [TKT-0002] [EE-205-M] [Software] [Med]  [● Progress] [HD2] [1h ago]   |
+| Management       |                                                                       |
+| - Handler Desk   |                                                                       |
+| - Routing Rules  |                                                                       |
+| - Analytics      |                                                                       |
+| Preferences      |                                                                       |
+| - Settings       |                                                                       |
++------------------+-----------------------------------------------------------------------+
 ```
+
+### 1. Operations Home
+* Key metrics strip: *Active Tickets*, *Resolution Rate*, *Fallback Queue*, *Waiting Queue*.
+* Recent activity feed and real-time team workload capacity meters.
+
+### 2. My Tickets Database
+* **Table View:** Dense data table with search (`/`), property filters (Category, Priority, Status), and pagination.
+* **Kanban Board View:** 4-column visual board (*Pending*, *Assigned*, *In Progress*, *Resolved*).
+* **Slide-over Drawer:** Complete event history timeline and quick status progression buttons.
+* **CSV Export:** Download filtered tickets as a clean `.csv` file.
+
+### 3. Submit Report Form
+* Centered minimalist form with silent, real-time DFA validation.
+* File dropzone supporting screenshots and diagnostic log files ($\le 2$ MB).
+
+### 4. Handler Workspace
+* Team selector tabs (`HD1`, `HD2`, `HD3`, `HD4`, `Level-2`).
+* Capacity utilization bar with 8-ticket limit warnings and team availability toggle.
+
+### 5. Routing Database
+* 40 explicit routing rules stored in MongoDB.
+* Central Fallback Queue with instant operator reassignment.
+* Escalations and priority overrides audit log.
+
+### 6. Service Analytics
+* Category volume distribution horizontal bars with exact counts and percentages.
+* Zonal load breakdown across *North Block*, *South Block*, *Admin Block*, and *Library Wing*.
+* Resolution ratio SVG donut chart.
+
+### 7. Settings
+* Appearance theme switcher: **Light (Warm Neutral)** vs. **Dark (Obsidian)**.
+* One-click demo seeder (14 realistic tickets) and database reset tools.
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+* [Node.js](https://nodejs.org/) v18+
+* [MongoDB](https://www.mongodb.com/) running locally on port `27017`
+
+### Installation & Run
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start application
+npm start
+```
+
+Open your browser at: **`http://localhost:4000`**
+
+Click **"Load Demo"** in the topbar to instantly populate 14 realistic support tickets and explore all views.
+
+---
+
+## 📡 REST API Reference
+
+| Method | Endpoint | Description |
+|:---:|---|---|
+| `GET` | `/api/state` | Returns all tickets, team loads, rejects, and routing rules |
+| `GET` | `/api/stream` | Server-Sent Events (SSE) real-time streaming connection |
+| `GET` | `/api/tickets/export/csv` | Downloads all tickets as an RFC-4180 CSV export |
+| `POST` | `/api/tickets` | Validates, classifies, routes, and creates a report |
+| `PATCH` | `/api/tickets/:id` | Updates ticket status (`Assigned`, `In Progress`, `Resolved`) or reopens |
+| `POST` | `/api/tickets/:id/reassign` | Manually reassigns ticket to target team with audit event |
+| `PATCH` | `/api/teams/:id` | Toggles availability (`avail`) or adjusts capacity (`cap`) |
+| `GET` | `/api/routing-rules` | Returns all 40 active routing rules |
+| `PATCH` | `/api/routing-rules/:id`| Updates preferred or backup teams for a routing rule |
+| `POST` | `/api/demo` | Populates 14 realistic demo tickets across all categories |
+| `POST` | `/api/reset` | Resets all ticket collections and restores default capacities |
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+|:---:|---|
+| `/` | Focus ticket search bar |
+| `Escape` | Close Slide-over Ticket Drawer |
+| `Ctrl + \` | Collapse / Expand sidebar navigation |
+
+---
+
+<div align="center">
+  <b>IT Helpdesk Ticket Router</b> • Built with precision, performance, and simplicity.
+</div>

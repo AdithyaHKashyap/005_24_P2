@@ -1,56 +1,56 @@
 <div align="center">
 
-# ⚡ IT Helpdesk Ticket Router
+# IT Helpdesk Ticket Router
 
 ### A Premium Notion-Inspired ITSM Operations Workspace
 
 [![Node.js Version](https://img.shields.io/badge/Node.js-v18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-v4.19-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-v8.3-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
-[![Real-Time Sync](https://img.shields.io/badge/Live_Sync-SSE_Stream-2383E2?style=for-the-badge&logo=lightning&logoColor=white)](#-real-time-sse-stream)
-[![Architecture](https://img.shields.io/badge/Design-Notion_Minimalist-F7F6F3?style=for-the-badge&logo=notion&logoColor=black)](#-interface-design--features)
+[![Real-Time Sync](https://img.shields.io/badge/Live_Sync-SSE_Stream-2383E2?style=for-the-badge)](#real-time-sse-stream)
+[![Architecture](https://img.shields.io/badge/Design-Notion_Minimalist-F7F6F3?style=for-the-badge)](#interface-design-and-features)
 
 <p align="center">
   <b>A production-grade IT Service Management (ITSM) web application built with a distraction-free, Notion-inspired aesthetic.</b><br>
   Features silent deterministic automata verification, a 5-category precedence classifier, explicit MongoDB routing rules, 8-ticket team capacity controls, and real-time multi-client live sync.
 </p>
 
-[Quick Start](#-quick-start) • [Core Features](#-interface-design--features) • [Architecture](#-system-architecture) • [Algorithms](#-core-algorithms) • [API Spec](#-rest-api-reference)
+[Quick Start](#quick-start) • [Core Features](#interface-design-and-features) • [Architecture](#system-architecture) • [Algorithms](#core-algorithms) • [API Spec](#rest-api-reference)
 
 ---
 
 </div>
 
-## 🌟 Highlights
+## Key Capabilities
 
 <table>
   <tr>
     <td width="50%">
-      <h3>📋 Notion-Style Database & Kanban</h3>
+      <h3>Notion-Style Database & Kanban</h3>
       <p>Seamlessly toggle between a spreadsheet-style <b>Database Table</b> (with search, property filters, and pagination) and a <b>Kanban Board View</b> organized by operational status.</p>
     </td>
     <td width="50%">
-      <h3>⚡ Real-Time SSE Multi-Client Sync</h3>
+      <h3>Real-Time SSE Multi-Client Sync</h3>
       <p>Instant Server-Sent Events (SSE) broadcast updates across all connected browsers in real time without manual page refreshes or polling lag.</p>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <h3>🔍 Silent Automata Validation</h3>
+      <h3>Silent Automata Validation</h3>
       <p>Validates structured device identifiers (<code>DEPT-ISSUE-PRIORITY</code>, e.g. <code>CS-101-H</code>) in real time using a <b>Deterministic Finite Automaton (DFA)</b> and equivalent <b>Regular Expression</b> without exposing academic clutter.</p>
     </td>
     <td width="50%">
-      <h3>🛡️ Strict 8-Ticket Capacity Guards</h3>
+      <h3>Strict 8-Ticket Capacity Guards</h3>
       <p>Strictly caps open workloads across 4 Tier-1 Helpdesk teams (<b>HD1–HD4</b>) at <b>8 open tickets</b>. Automatically routes overflow to Level-2 escalation or waiting queues.</p>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <h3>📑 Slide-Over Ticket Drawer</h3>
+      <h3>Slide-Over Ticket Drawer</h3>
       <p>Clicking any ticket smoothly reveals a right-hand inspection drawer featuring complete chronological audit timelines, quick status progression buttons, and attached files.</p>
     </td>
     <td width="50%">
-      <h3>📎 Diagnostic Attachments & CSV Export</h3>
+      <h3>Diagnostic Attachments & CSV Export</h3>
       <p>Upload screenshots and diagnostic log files (up to 2MB) directly with incident reports, and export clean, formatted RFC-4180 CSV reports in one click.</p>
     </td>
   </tr>
@@ -58,7 +58,7 @@
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 ```mermaid
 flowchart TD
@@ -94,7 +94,7 @@ flowchart TD
 
 ---
 
-## 🔬 Core Algorithms
+## Core Algorithms
 
 The engine ([`helpdesk-router/engine.js`](file:///c:/Users/haris/Desktop/Hackathon/helpdesk-router/engine.js)) provides pure, deterministic algorithmic verification:
 
@@ -150,13 +150,13 @@ $$\mathbf{Network} \succ \mathbf{Access} \succ \mathbf{Hardware} \succ \mathbf{S
 
 ---
 
-## 🖥️ Interface Design & Features
+## Interface Design and Features
 
 Designed with a warm-neutral aesthetic inspired by Notion and Linear:
 
 ```text
 +------------------------------------------------------------------------------------------+
-| [=] Sidebar Toggle  /  Workspace Navigation Breadcrumb             [Search (/)] [Live ●] |
+| [=] Sidebar Toggle  /  Workspace Navigation Breadcrumb             [Search (/)] [Live *] |
 +------------------+-----------------------------------------------------------------------+
 | SIDEBAR          | MAIN WORKSPACE CANVAS                                                 |
 |                  |                                                                       |
@@ -166,8 +166,8 @@ Designed with a warm-neutral aesthetic inspired by Notion and Linear:
 | Overview         | --------------------------------------------------------------------- |
 | - Home           | Notion Database Table / Kanban Board View                             |
 | - My Tickets     |                                                                       |
-| - Submit Report  | [TKT-0001] [CS-101-H] [Hardware] [High] [● Assigned] [HD1] [2h ago]   |
-|                  | [TKT-0002] [EE-205-M] [Software] [Med]  [● Progress] [HD2] [1h ago]   |
+| - Submit Report  | [TKT-0001] [CS-101-H] [Hardware] [High] [Assigned] [HD1] [2h ago]    |
+|                  | [TKT-0002] [EE-205-M] [Software] [Med]  [Progress] [HD2] [1h ago]    |
 | Management       |                                                                       |
 | - Handler Desk   |                                                                       |
 | - Routing Rules  |                                                                       |
@@ -211,7 +211,7 @@ Designed with a warm-neutral aesthetic inspired by Notion and Linear:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 * [Node.js](https://nodejs.org/) v18+
@@ -237,7 +237,7 @@ Click **"Load Demo"** in the topbar to instantly populate 14 realistic support t
 
 ---
 
-## 📡 REST API Reference
+## REST API Reference
 
 | Method | Endpoint | Description |
 |:---:|---|---|
@@ -255,7 +255,7 @@ Click **"Load Demo"** in the topbar to instantly populate 14 realistic support t
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## Keyboard Shortcuts
 
 | Shortcut | Action |
 |:---:|---|
@@ -265,7 +265,7 @@ Click **"Load Demo"** in the topbar to instantly populate 14 realistic support t
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 005_24_P2/
